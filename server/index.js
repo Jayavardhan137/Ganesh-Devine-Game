@@ -101,6 +101,18 @@ app.post('/api/auth/logout', (req, res) => {
   return res.json({ success: true, message: 'Logged out successfully.' });
 });
 
+/**
+ * GET /api/config
+ * Returns public client configuration safely
+ */
+app.get('/api/config', (req, res) => {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '';
+  return res.json({
+    googleClientId,
+    hasGoogleClientId: Boolean(googleClientId && googleClientId.length > 0)
+  });
+});
+
 // ==========================================
 // LEADERBOARD & SCORES ROUTES
 // ==========================================

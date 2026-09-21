@@ -14,7 +14,7 @@ export class AuthService {
     this.currentProgress = null;
     this.onAuthStateChanged = null;
 
-    // Remove any test id from previous browser subagent run
+    // Clean any legacy test keys
     localStorage.removeItem('ganesha_custom_client_id');
 
     this.googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -22,9 +22,22 @@ export class AuthService {
   }
 
   /**
-   * Initializes session check on app load
+   * Initializes session check on app load and retrieves server config
    */
   async init() {
+    // Dynamically retrieve client ID from server if not set in bundle
+    try {
+      const configRes = await fetch('/api/config');
+      if (configRes.ok) {
+        const configData = await configRes.json();
+        if (configData.googleClientId) {
+          this.googleClientId = configData.googleClientId;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch /api/config:', e.message);
+    }
+
     this.loadGoogleScript();
 
     if (this.token) {
@@ -80,7 +93,13 @@ export class AuthService {
    * Initializes Google Identity Services button
    */
   setupGoogleButton(containerId = 'google-signin-btn-container') {
-    if (!window.google || !this.googleClientId) return;
+    if (!window.google) return;
+
+    if (!this.googleClientId) {
+      const customBtn = document.getElementById('btn-google-login');
+      if (customBtn) customBtn.style.display = 'inline-flex';
+      return;
+    }
 
     try {
       window.google.accounts.id.initialize({
@@ -88,14 +107,17 @@ export class AuthService {
         callback: async (response) => {
           if (response.credential) {
             try {
+              this.clearError();
               await this.signInWithCredential(response.credential);
             } catch (err) {
-              const errEl = document.getElementById('login-error');
-              if (errEl) {
-                errEl.innerText = err.message || 'Unable to sign in. Please try again.';
-                errEl.classList.remove('hidden');
-              }
+              this.showError(err.message || 'Unable to sign in. Please try again.');
             }
+          }
+        },
+        error_callback: (err) => {
+          console.warn('Google Identity error callback:', err);
+          if (err && err.type === 'invalid_client') {
+            this.showError('Invalid Google Client ID. Please verify your OAuth 2.0 Web Client ID in Google Cloud Console.');
           }
         }
       });
@@ -129,12 +151,47 @@ export class AuthService {
    * Prompts Google Sign In via Google Identity Services
    */
   promptGoogleSignIn() {
-    if (window.google && this.googleClientId) {
+    this.clearError();
+
+    if (!this.googleClientId) {
+      this.showError('Google Client ID is missing. Please save GOOGLE_CLIENT_ID in your .env file and restart the server.');
+      return;
+    }
+
+    if (window.google) {
       try {
-        window.google.accounts.id.prompt();
+        window.google.accounts.id.prompt((notification) => {
+          if (notification && notification.isNotDisplayed && notification.isNotDisplayed()) {
+            console.info('Google One Tap notice:', notification.getNotDisplayedReason());
+          }
+        });
       } catch (e) {
-        console.warn('Google prompt notice:', e.message);
+        this.showError('Google Sign-In prompt error: ' + e.message);
       }
+    } else {
+      this.showError('Google Identity SDK is loading. Please try again.');
+    }
+  }
+
+  /**
+   * Displays an error message on the landing screen
+   */
+  showError(message) {
+    const errEl = document.getElementById('login-error');
+    if (errEl) {
+      errEl.innerText = message;
+      errEl.classList.remove('hidden');
+    }
+  }
+
+  /**
+   * Clears error message
+   */
+  clearError() {
+    const errEl = document.getElementById('login-error');
+    if (errEl) {
+      errEl.innerText = '';
+      errEl.classList.add('hidden');
     }
   }
 

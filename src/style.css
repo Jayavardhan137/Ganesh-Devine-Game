@@ -987,6 +987,9 @@ button {
   font-size: 0.88rem;
   font-weight: 600;
   text-align: center;
+  margin-top: 12px;
+  line-height: 1.4;
+  max-width: 320px;
 }
 
 /* User Account Header Bar */
