@@ -1,23 +1,27 @@
 /**
  * UIManager manages the entire DOM UI:
- * - Cinematic Main Menu (Play, How to Play, Leaderboard, Settings, Credits)
+ * - Google Authentication Landing Screen (Continue with Google)
+ * - Authenticated User Profile Menu (Profile, Leaderboard, Settings, Logout)
+ * - Cinematic Main Menu
  * - In-game HUD (Objective, Blessings counter, Ability cooldown, Interaction prompts)
  * - Ganesha Divine Guidance dialogue subtitles
  * - Interactive Rangoli Puzzle modal
  * - Mobile virtual joystick and touch buttons
  * - Pause menu
- * - Victory celebration screen with statistics and leaderboard entry
+ * - Real Database Leaderboard
+ * - Personal Best comparison ("NEW PERSONAL BEST!" vs "RUN COMPLETE")
  */
 export class UIManager {
   constructor() {
     this.container = document.getElementById('ui-container');
 
-    // Callbacks to be hooked by GameManager
+    // Callbacks to be hooked by GameManager / AuthService
+    this.onGoogleLoginClick = null;
+    this.onLogoutClick = null;
     this.onStartGame = null;
     this.onResumeGame = null;
     this.onRestartGame = null;
     this.onSettingsChange = null;
-    this.onLeaderboardSubmit = null;
     this.onAbilityClick = null;
     this.onInteractClick = null;
     this.onJumpClick = null;
@@ -32,8 +36,58 @@ export class UIManager {
 
   renderDOM() {
     this.container.innerHTML = `
+      <!-- LANDING / LOGIN SCREEN (GOOGLE AUTHENTICATION) -->
+      <div id="login-screen" class="screen-overlay active">
+        <div class="menu-content login-content">
+          <div class="divine-symbol">ॐ</div>
+          <h1 class="game-title">GANESHA</h1>
+          <h2 class="game-subtitle">THE DIVINE QUEST</h2>
+          <p class="tagline">Complete the sacred journey. Restore the festival of light.</p>
+          
+          <div class="login-card-box">
+            <p class="login-intro">Sign in with Google to begin your sacred journey, record your blessings, and compete on the divine leaderboard.</p>
+            
+            <button id="btn-google-login" class="btn-google">
+              <svg class="google-icon" viewBox="0 0 24 24" width="22" height="22">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+
+            <div id="google-signin-btn-container"></div>
+            <p id="login-error" class="login-error-msg hidden"></p>
+          </div>
+
+          <div class="menu-footer">
+            <span>Ganesh Chaturthi Celebration • Official Google OAuth</span>
+          </div>
+        </div>
+      </div>
+
       <!-- CINEMATIC MAIN MENU -->
-      <div id="main-menu" class="screen-overlay active">
+      <div id="main-menu" class="screen-overlay hidden">
+        <!-- Top Right Authenticated User Account Menu -->
+        <div class="user-account-header">
+          <div id="user-badge" class="user-badge" title="Account Menu">
+            <div id="user-avatar-wrap" class="user-avatar-wrap">
+              <span id="user-avatar-fallback">🪔</span>
+              <img id="user-avatar" class="user-avatar hidden" src="" alt="Devotee" />
+            </div>
+            <span id="user-name" class="user-name">Devotee</span>
+            <span class="dropdown-arrow">▼</span>
+          </div>
+          <div id="user-dropdown-menu" class="user-dropdown hidden">
+            <button id="btn-dropdown-profile" class="dropdown-item">👤 View Profile</button>
+            <button id="btn-dropdown-leaderboard" class="dropdown-item">🏆 Leaderboard</button>
+            <button id="btn-dropdown-settings" class="dropdown-item">⚙️ Settings</button>
+            <div class="dropdown-divider"></div>
+            <button id="btn-dropdown-logout" class="dropdown-item item-logout">🚪 Sign Out</button>
+          </div>
+        </div>
+
         <div class="menu-content">
           <div class="divine-symbol">ॐ</div>
           <h1 class="game-title">GANESHA</h1>
@@ -249,25 +303,67 @@ export class UIManager {
         </div>
       </div>
 
-      <!-- LEADERBOARD MODAL -->
+      <!-- LEADERBOARD MODAL (REAL DATABASE DATA) -->
       <div id="modal-leaderboard" class="modal-overlay hidden">
-        <div class="modal-card">
+        <div class="modal-card leaderboard-card">
           <h2 class="modal-title">SACRED DEVOTEES LEADERBOARD</h2>
-          <table class="leaderboard-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Devotee Name</th>
-                <th>Blessings</th>
-                <th>Time</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-              <!-- Rendered dynamically -->
-            </tbody>
-          </table>
+          <p class="modal-desc">Real authenticated pilgrims who have restored the Festival of Light.</p>
+          <div class="table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player</th>
+                  <th>Score</th>
+                  <th>Time</th>
+                  <th>Blessings</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body">
+                <!-- Rendered dynamically from SQLite database -->
+              </tbody>
+            </table>
+          </div>
           <button id="btn-close-leaderboard" class="btn-primary">CLOSE</button>
+        </div>
+      </div>
+
+      <!-- USER PROFILE MODAL -->
+      <div id="modal-profile" class="modal-overlay hidden">
+        <div class="modal-card">
+          <div class="profile-header">
+            <div class="profile-avatar-large-wrap">
+              <span id="profile-avatar-fallback">🪔</span>
+              <img id="profile-modal-avatar" class="profile-avatar-large hidden" src="" alt="Avatar" />
+            </div>
+            <h2 id="profile-modal-name" class="modal-title">Devotee</h2>
+            <span id="profile-modal-email" class="profile-email"></span>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-label">Personal Best</span>
+              <span id="profile-stat-score" class="stat-val">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Best Time</span>
+              <span id="profile-stat-time" class="stat-val">--:--</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Total Blessings</span>
+              <span id="profile-stat-blessings" class="stat-val">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Games Completed</span>
+              <span id="profile-stat-games" class="stat-val">0</span>
+            </div>
+          </div>
+
+          <div class="profile-created-box">
+            <span>Account Registered: </span><strong id="profile-created-date">-</strong>
+          </div>
+
+          <button id="btn-close-profile" class="btn-primary">CLOSE</button>
         </div>
       </div>
 
@@ -279,6 +375,8 @@ export class UIManager {
             <strong>GANESHA: THE DIVINE QUEST</strong><br><br>
             A commercial-quality 3D Indian festival adventure built with reverence for Ganesh Chaturthi.<br><br>
             <strong>Engine:</strong> Three.js & WebGL<br>
+            <strong>Authentication:</strong> Google OAuth 2.0 & JWT Sessions<br>
+            <strong>Database:</strong> SQLite Persistent Progress & Leaderboard<br>
             <strong>Audio:</strong> Procedural Web Audio Synthesizer (Tanpura, Flute, Bells, Dhol)<br>
             <strong>Art Direction:</strong> Modern Indian Festival Fantasy<br><br>
             <em>"Ganpati Bappa Morya! Mangal Murti Morya!"</em>
@@ -291,32 +389,28 @@ export class UIManager {
       <div id="victory-overlay" class="screen-overlay hidden">
         <div class="victory-card">
           <div class="victory-icon">🪔</div>
+          <div id="victory-run-badge" class="run-status-badge">RUN COMPLETE</div>
           <h1 class="victory-title">THE FESTIVAL LIGHTS AGAIN!</h1>
           <h2 class="victory-subtitle">Ganpati Bappa Morya!</h2>
           <p class="victory-blessing">Lord Ganesha has bestowed His divine grace upon you. You have restored light and joy to the world.</p>
 
           <div class="stats-grid">
             <div class="stat-box">
-              <span class="stat-label">Blessings Collected</span>
-              <span id="stat-blessings" class="stat-val">20/20</span>
+              <span class="stat-label">Current Score</span>
+              <span id="stat-score" class="stat-val">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Personal Best</span>
+              <span id="stat-personal-best" class="stat-val">0</span>
             </div>
             <div class="stat-box">
               <span class="stat-label">Completion Time</span>
-              <span id="stat-time" class="stat-val">04:32</span>
+              <span id="stat-time" class="stat-val">--:--</span>
             </div>
             <div class="stat-box">
-              <span class="stat-label">Puzzles Completed</span>
-              <span id="stat-puzzles" class="stat-val">3/3</span>
+              <span class="stat-label">Blessings Collected</span>
+              <span id="stat-blessings" class="stat-val">0/20</span>
             </div>
-            <div class="stat-box">
-              <span class="stat-label">Total Score</span>
-              <span id="stat-score" class="stat-val">4250</span>
-            </div>
-          </div>
-
-          <div class="name-entry-wrap">
-            <input type="text" id="player-name-input" placeholder="Enter Devotee Name" maxlength="16" value="Devotee">
-            <button id="btn-submit-score" class="btn-primary">SUBMIT SCORE</button>
           </div>
 
           <div class="victory-buttons">
@@ -329,7 +423,50 @@ export class UIManager {
   }
 
   bindEvents() {
-    // Menu Buttons
+    // Google Sign-In button click
+    document.getElementById('btn-google-login').addEventListener('click', () => {
+      if (this.onGoogleLoginClick) this.onGoogleLoginClick();
+    });
+
+    // User Account Menu Dropdown Toggle
+    const userBadge = document.getElementById('user-badge');
+    const userDropdown = document.getElementById('user-dropdown-menu');
+    userBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userDropdown.classList.toggle('hidden');
+    });
+
+    window.addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+    });
+
+    // Dropdown Items
+    document.getElementById('btn-dropdown-profile').addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+      this.showModal('modal-profile');
+    });
+
+    document.getElementById('btn-dropdown-leaderboard').addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+      if (this.onViewLeaderboard) this.onViewLeaderboard();
+      this.showModal('modal-leaderboard');
+    });
+
+    document.getElementById('btn-dropdown-settings').addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+      this.showModal('modal-settings');
+    });
+
+    document.getElementById('btn-dropdown-logout').addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+      if (this.onLogoutClick) this.onLogoutClick();
+    });
+
+    document.getElementById('btn-close-profile').addEventListener('click', () => {
+      this.hideModal('modal-profile');
+    });
+
+    // Main Menu Buttons
     document.getElementById('btn-play').addEventListener('click', () => {
       if (this.onStartGame) this.onStartGame();
     });
@@ -351,6 +488,7 @@ export class UIManager {
     });
 
     document.getElementById('btn-leaderboard').addEventListener('click', () => {
+      if (this.onViewLeaderboard) this.onViewLeaderboard();
       this.showModal('modal-leaderboard');
     });
 
@@ -460,14 +598,8 @@ export class UIManager {
     });
 
     document.getElementById('btn-victory-leaderboard').addEventListener('click', () => {
+      if (this.onViewLeaderboard) this.onViewLeaderboard();
       this.showModal('modal-leaderboard');
-    });
-
-    document.getElementById('btn-submit-score').addEventListener('click', () => {
-      const name = document.getElementById('player-name-input').value.trim() || 'Devotee';
-      if (this.onLeaderboardSubmit) this.onLeaderboardSubmit(name);
-      document.getElementById('btn-submit-score').innerText = 'SUBMITTED! ✓';
-      document.getElementById('btn-submit-score').disabled = true;
     });
 
     // Mobile Virtual Joystick Setup
@@ -529,14 +661,88 @@ export class UIManager {
     zone.addEventListener('touchcancel', endJoystick, { passive: true });
   }
 
+  showLoginScreen() {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-screen').classList.add('active');
+    document.getElementById('main-menu').classList.remove('active');
+    document.getElementById('main-menu').classList.add('hidden');
+    document.getElementById('hud').classList.add('hidden');
+  }
+
+  hideLoginScreen() {
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('login-screen').classList.add('hidden');
+  }
+
   showMainMenu() {
+    this.hideLoginScreen();
+    document.getElementById('main-menu').classList.remove('hidden');
     document.getElementById('main-menu').classList.add('active');
     document.getElementById('hud').classList.add('hidden');
   }
 
   hideMainMenu() {
     document.getElementById('main-menu').classList.remove('active');
+    document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
+  }
+
+  updateUserProfile(user, progress) {
+    if (!user) return;
+
+    // Header user badge
+    const nameEl = document.getElementById('user-name');
+    if (nameEl) nameEl.innerText = user.name || 'Devotee';
+
+    const avatarImg = document.getElementById('user-avatar');
+    const avatarFallback = document.getElementById('user-avatar-fallback');
+    if (user.avatarUrl && avatarImg) {
+      avatarImg.src = user.avatarUrl;
+      avatarImg.classList.remove('hidden');
+      if (avatarFallback) avatarFallback.classList.add('hidden');
+    }
+
+    // Profile modal
+    const pName = document.getElementById('profile-modal-name');
+    if (pName) pName.innerText = user.name || 'Devotee';
+
+    const pEmail = document.getElementById('profile-modal-email');
+    if (pEmail) pEmail.innerText = user.email || '';
+
+    const pAvatar = document.getElementById('profile-modal-avatar');
+    const pFallback = document.getElementById('profile-avatar-fallback');
+    if (user.avatarUrl && pAvatar) {
+      pAvatar.src = user.avatarUrl;
+      pAvatar.classList.remove('hidden');
+      if (pFallback) pFallback.classList.add('hidden');
+    }
+
+    if (progress) {
+      const pScore = document.getElementById('profile-stat-score');
+      if (pScore) pScore.innerText = progress.highest_score || 0;
+
+      const pTime = document.getElementById('profile-stat-time');
+      if (pTime) {
+        if (progress.best_completion_time) {
+          const m = Math.floor(progress.best_completion_time / 60);
+          const s = Math.floor(progress.best_completion_time % 60);
+          pTime.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        } else {
+          pTime.innerText = '--:--';
+        }
+      }
+
+      const pBlessings = document.getElementById('profile-stat-blessings');
+      if (pBlessings) pBlessings.innerText = progress.total_blessings || 0;
+
+      const pGames = document.getElementById('profile-stat-games');
+      if (pGames) pGames.innerText = progress.games_completed || 0;
+    }
+
+    const pDate = document.getElementById('profile-created-date');
+    if (pDate && user.createdAt) {
+      pDate.innerText = new Date(user.createdAt).toLocaleDateString();
+    }
   }
 
   showIntroOverlay(onSkip) {
@@ -564,11 +770,24 @@ export class UIManager {
     document.getElementById('hud').classList.add('hidden');
   }
 
-  showVictory(stats) {
-    document.getElementById('stat-blessings').innerText = `${stats.blessings}/20`;
-    document.getElementById('stat-time').innerText = stats.timeFormatted;
-    document.getElementById('stat-puzzles').innerText = `${stats.puzzles}/3`;
-    document.getElementById('stat-score').innerText = stats.score;
+  showVictory({ score, personalBest, isNewPersonalBest, timeFormatted, blessings }) {
+    const badge = document.getElementById('victory-run-badge');
+    if (badge) {
+      badge.innerText = isNewPersonalBest ? '🌟 NEW PERSONAL BEST! 🌟' : 'RUN COMPLETE';
+      badge.className = isNewPersonalBest ? 'run-status-badge badge-record' : 'run-status-badge';
+    }
+
+    const scoreEl = document.getElementById('stat-score');
+    if (scoreEl) scoreEl.innerText = score;
+
+    const pbEl = document.getElementById('stat-personal-best');
+    if (pbEl) pbEl.innerText = personalBest;
+
+    const timeEl = document.getElementById('stat-time');
+    if (timeEl) timeEl.innerText = timeFormatted;
+
+    const bEl = document.getElementById('stat-blessings');
+    if (bEl) bEl.innerText = `${blessings}/20`;
 
     const overlay = document.getElementById('victory-overlay');
     overlay.classList.remove('hidden');
@@ -614,7 +833,6 @@ export class UIManager {
     const isMidAligned = midAngle % 360 === 0;
     const isInnerAligned = innerAngle % 360 === 0;
 
-    // Outer Ring Feedback
     const sOuter = document.getElementById('status-outer');
     if (sOuter) {
       sOuter.className = `ring-status ${isOuterAligned ? 'status-aligned' : 'status-pending'}`;
@@ -625,7 +843,6 @@ export class UIManager {
       else outerEl.classList.remove('ring-aligned');
     }
 
-    // Mid Ring Feedback
     const sMid = document.getElementById('status-mid');
     if (sMid) {
       sMid.className = `ring-status ${isMidAligned ? 'status-aligned' : 'status-pending'}`;
@@ -636,7 +853,6 @@ export class UIManager {
       else midEl.classList.remove('ring-aligned');
     }
 
-    // Inner Ring Feedback
     const sInner = document.getElementById('status-inner');
     if (sInner) {
       sInner.className = `ring-status ${isInnerAligned ? 'status-aligned' : 'status-pending'}`;
@@ -728,17 +944,41 @@ export class UIManager {
     }, duration);
   }
 
+  showLoginError(message) {
+    const el = document.getElementById('login-error');
+    if (el) {
+      el.innerText = message;
+      el.classList.remove('hidden');
+    }
+  }
+
   renderLeaderboard(entries) {
     const tbody = document.getElementById('leaderboard-body');
     if (!tbody) return;
 
-    tbody.innerHTML = entries.map((entry, idx) => `
+    if (!entries || entries.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center; padding: 20px; color: #AAA; font-style: italic;">
+            No sacred journey records yet. Be the first devotee to complete the quest!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = entries.map((entry) => `
       <tr>
-        <td>#${idx + 1}</td>
-        <td>${entry.name}</td>
-        <td>${entry.blessings}/20</td>
-        <td>${entry.time}</td>
+        <td>#${entry.rank}</td>
+        <td>
+          <div class="leaderboard-player-cell">
+            ${entry.avatarUrl ? `<img class="leaderboard-avatar" src="${entry.avatarUrl}" alt="Avatar" />` : `<span class="leaderboard-avatar-fallback">🪔</span>`}
+            <span class="leaderboard-player-name">${entry.name}</span>
+          </div>
+        </td>
         <td><strong>${entry.score}</strong></td>
+        <td>${entry.time}</td>
+        <td>${entry.blessings}</td>
       </tr>
     `).join('');
   }

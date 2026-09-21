@@ -4,15 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"node server/index.js\" \"vite\"",
+    "server": "node server/index.js",
+    "client": "vite",
     "build": "vite build",
+    "start": "node server/index.js",
     "preview": "vite preview"
   },
   "devDependencies": {
     "vite": "^8.3.0"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "canvas-confetti": "^1.9.4",
+    "concurrently": "^10.0.5",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.1",
+    "express": "^5.2.1",
+    "google-auth-library": "^11.1.0",
+    "jsonwebtoken": "^9.0.3",
     "three": "^0.186.0"
   }
 }

@@ -902,28 +902,298 @@ button {
   font-family: var(--font-cinzel);
 }
 
-.name-entry-wrap {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  justify-content: center;
-}
-
-.name-entry-wrap input {
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--gold-primary);
-  background: rgba(10, 5, 20, 0.7);
-  color: #FFF;
-  font-family: var(--font-body);
-  font-size: 1rem;
-  outline: none;
-}
-
 .victory-buttons {
   display: flex;
   gap: 12px;
   justify-content: center;
+}
+
+/* Run Status Badge (Personal Best vs Run Complete) */
+.run-status-badge {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-family: var(--font-cinzel);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #FFF;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  margin-bottom: 10px;
+}
+
+.badge-record {
+  background: linear-gradient(90deg, #FFB703, #FF7A00);
+  color: #1A0826;
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+  animation: divineAuraPulse 1.2s infinite alternate;
+}
+
+/* ==========================================================================
+   GOOGLE AUTHENTICATION & USER PROFILE STYLING
+   ========================================================================== */
+
+/* Login Box */
+.login-card-box {
+  background: var(--night-card);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 28px 36px;
+  max-width: 440px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px var(--gold-glow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin: 15px 0;
+}
+
+.login-intro {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #E2D4BD;
+  text-align: center;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #FFFFFF;
+  color: #3C4043;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1px solid #DADCE0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  width: 260px;
+  transition: all 0.25s ease;
+}
+
+.btn-google:hover {
+  background: #F8F9FA;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+  transform: translateY(-2px);
+}
+
+.login-error-msg {
+  color: #FF6B6B;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* User Account Header Bar */
+.user-account-header {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--night-card);
+  border: 1.5px solid var(--glass-border);
+  padding: 6px 14px 6px 8px;
+  border-radius: 30px;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  transition: all 0.25s ease;
+}
+
+.user-badge:hover {
+  border-color: var(--gold-primary);
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+}
+
+.user-avatar-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--gold-primary);
+}
+
+.user-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-family: var(--font-cinzel);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #FFFFFF;
+}
+
+.dropdown-arrow {
+  font-size: 0.65rem;
+  color: var(--gold-primary);
+}
+
+/* Dropdown Menu */
+.user-dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 180px;
+  background: rgba(18, 10, 32, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  background: transparent;
+  color: #E2D4BD;
+  padding: 10px 16px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.92rem;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 215, 0, 0.15);
+  color: #FFF;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.item-logout {
+  color: #FF7B7B;
+}
+
+.item-logout:hover {
+  background: rgba(255, 50, 70, 0.2);
+  color: #FF5566;
+}
+
+/* User Profile Modal */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.profile-avatar-large-wrap {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.15);
+  border: 2.5px solid var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 20px var(--gold-glow);
+  font-size: 2.2rem;
+}
+
+.profile-avatar-large {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-email {
+  font-size: 0.88rem;
+  color: #AAA;
+}
+
+.profile-created-box {
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: #CCC;
+}
+
+/* Leaderboard Cells */
+.leaderboard-card {
+  max-width: 620px;
+}
+
+.table-wrap {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.leaderboard-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.leaderboard-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--gold-primary);
+}
+
+.leaderboard-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.leaderboard-player-name {
+  font-weight: 600;
+  color: #FFF;
+}
+
+/* Client ID Config Input */
+.config-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.config-input-wrap input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--gold-primary);
+  background: rgba(10, 5, 20, 0.75);
+  color: #FFF;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  outline: none;
 }
 
 /* ==========================================================================

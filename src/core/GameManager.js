@@ -11,10 +11,12 @@ import { AbilityManager } from '../player/AbilityManager.js';
 import { CollectibleManager } from '../gameplay/CollectibleManager.js';
 import { PuzzleManager } from '../gameplay/PuzzleManager.js';
 import { SaveManager } from './SaveManager.js';
+import { AuthService } from './AuthService.js';
 import { UIManager } from '../ui/UIManager.js';
 import { CinematicManager } from '../cinematics/CinematicManager.js';
 
 export const GameState = {
+  LOGIN: 'LOGIN',
   MENU: 'MENU',
   INTRO: 'INTRO',
   PLAYING: 'PLAYING',
@@ -25,16 +27,17 @@ export const GameState = {
 };
 
 /**
- * GameManager is the master orchestrator coordinating:
+ * GameManager coordinates:
+ * - Real Google Authentication state & isolated user sessions
  * - Three.js WebGL rendering loop
- * - State machine (MENU -> INTRO -> PLAYING -> PUZZLE -> ENDING -> VICTORY)
+ * - State machine (LOGIN -> MENU -> INTRO -> PLAYING -> PUZZLE -> ENDING -> VICTORY)
  * - Level progression across 4 Sacred Zones
- * - Scoring & Time bonus
+ * - Real score submission & personal best verification
  * - Checkpoints & Respawning
  */
 export class GameManager {
   constructor() {
-    this.state = GameState.MENU;
+    this.state = GameState.LOGIN;
     this.stage = 1;
 
     this.score = 0;
@@ -69,6 +72,7 @@ export class GameManager {
     document.getElementById('canvas-container').appendChild(this.renderer.domElement);
 
     // 2. Core Subsystems
+    this.auth = new AuthService();
     this.saveManager = new SaveManager();
     this.textures = new TextureFactory();
     this.particles = new ParticleEngine(this.scene);
@@ -76,7 +80,7 @@ export class GameManager {
     this.ui = new UIManager();
 
     // Apply saved settings
-    const saved = this.saveManager.data.settings;
+    const saved = this.saveManager.settings;
     if (saved) {
       this.audio.setMasterVolume(saved.masterVolume);
       this.audio.setMusicVolume(saved.musicVolume);
@@ -88,8 +92,8 @@ export class GameManager {
 
     // Lord Ganesha 3D Model seated majestically on Festival Stage
     this.ganesha = new GaneshaModel();
-    this.ganesha.group.position.set(0, 1.8, 185); // Grand shrine
-    this.ganesha.group.rotation.y = Math.PI; // facing devotees
+    this.ganesha.group.position.set(0, 1.8, 185);
+    this.ganesha.group.rotation.y = Math.PI;
     this.scene.add(this.ganesha.group);
 
     // Devotee Player Character
@@ -114,15 +118,38 @@ export class GameManager {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Populate Leaderboard
-    this.ui.renderLeaderboard(this.saveManager.getLeaderboard());
-
     // Menu Camera idle placement
     this.camera.position.set(0, 6, -14);
     this.camera.lookAt(0, 3, 20);
+
+    // Setup Auth State Listener
+    this.auth.onAuthStateChanged = (authenticated, user, progress) => {
+      if (authenticated && user) {
+        this.saveManager.setUserId(user.id);
+        this.ui.updateUserProfile(user, progress);
+        this.ui.showMainMenu();
+        this.state = GameState.MENU;
+        this.refreshLeaderboard();
+      } else {
+        this.saveManager.setUserId('guest');
+        this.ui.showLoginScreen();
+        this.state = GameState.LOGIN;
+      }
+    };
+
+    // Initialize session check
+    this.auth.init();
   }
 
   bindUI() {
+    // Auth & Navigation
+    this.ui.onGoogleLoginClick = () => this.auth.promptGoogleSignIn();
+    this.ui.onLogoutClick = async () => {
+      await this.auth.logout();
+    };
+    this.ui.onViewLeaderboard = () => this.refreshLeaderboard();
+
+    // Gameplay
     this.ui.onStartGame = () => this.startGame();
     this.ui.onResumeGame = () => this.resumeGame();
     this.ui.onAbilityClick = () => this.ability.activate();
@@ -150,16 +177,6 @@ export class GameManager {
       if (type === 'sens') this.camController.sensitivity = 0.0032 * val;
     };
 
-    this.ui.onLeaderboardSubmit = (name) => {
-      const list = this.saveManager.addLeaderboardEntry(
-        name,
-        this.score,
-        this.completionTime,
-        this.collectibles.collectedCount
-      );
-      this.ui.renderLeaderboard(list);
-    };
-
     // ESC to pause
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Escape') {
@@ -171,6 +188,11 @@ export class GameManager {
         if (this.state === GameState.PLAYING) this.handlePlayerInteraction();
       }
     });
+  }
+
+  async refreshLeaderboard() {
+    const list = await this.auth.fetchLeaderboard(10);
+    this.ui.renderLeaderboard(list);
   }
 
   setupProgression() {
@@ -268,7 +290,7 @@ export class GameManager {
     }
   }
 
-  triggerGrandFinale() {
+  async triggerGrandFinale() {
     this.environment.flameAltarObj.ignite();
     this.audio.playLightDiya();
     this.state = GameState.ENDING;
@@ -281,21 +303,42 @@ export class GameManager {
     const secs = Math.floor(this.completionTime % 60);
     const timeFormatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
+    // Submit validated score to backend database
+    let submissionResult = null;
+    try {
+      submissionResult = await this.auth.submitScore({
+        score: this.score,
+        completionTime: this.completionTime,
+        blessings: this.collectibles.collectedCount,
+        puzzlesCompleted: this.puzzlesSolvedCount
+      });
+    } catch (e) {
+      console.warn('Score submission notice:', e.message);
+    }
+
     // Play 20-second cinematic finale
     this.cinematics.playEnding(() => {
       this.state = GameState.VICTORY;
+      const personalBest = submissionResult?.personalBest ?? this.score;
+      const isNewPersonalBest = submissionResult?.isNewPersonalBest ?? true;
+
       this.ui.showVictory({
-        blessings: this.collectibles.collectedCount,
+        score: this.score,
+        personalBest,
+        isNewPersonalBest,
         timeFormatted,
-        puzzles: this.puzzlesSolvedCount,
-        score: this.score
+        blessings: this.collectibles.collectedCount
       });
+
       this.saveManager.updateProgress(
         this.score,
         this.completionTime,
         this.collectibles.collectedCount,
         4
       );
+
+      // Refresh database leaderboard
+      this.refreshLeaderboard();
     });
   }
 
@@ -366,8 +409,8 @@ export class GameManager {
       this.updateInteractionPrompts();
     } else if (this.state === GameState.INTRO || this.state === GameState.ENDING) {
       this.cinematics.update(delta);
-    } else if (this.state === GameState.MENU) {
-      // Gentle orbit camera in menu
+    } else if (this.state === GameState.MENU || this.state === GameState.LOGIN) {
+      // Gentle orbit camera in menu / login
       this.camera.position.x = Math.sin(time * 0.15) * 12;
       this.camera.position.z = -12 + Math.cos(time * 0.15) * 6;
       this.camera.position.y = 5.5 + Math.sin(time * 0.2) * 1.0;
