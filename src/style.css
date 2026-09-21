@@ -1,0 +1,951 @@
+/* ==========================================================================
+   GANESHA: THE DIVINE QUEST - COMPLETE FESTIVAL STYLING
+   ========================================================================== */
+
+:root {
+  --gold-primary: #FFD700;
+  --gold-glow: rgba(255, 215, 0, 0.6);
+  --saffron-vibrant: #FF7A00;
+  --vermilion: #E63946;
+  --temple-sandstone: #C49A6C;
+  --night-indigo: #0F091E;
+  --night-card: rgba(18, 10, 32, 0.78);
+  --glass-border: rgba(255, 215, 0, 0.35);
+  --font-cinzel-dec: 'Cinzel Decorative', Georgia, serif;
+  --font-cinzel: 'Cinzel', Georgia, serif;
+  --font-body: 'Outfit', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--night-indigo);
+  font-family: var(--font-body);
+  color: #FFF2D1;
+}
+
+#game-viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#ui-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   BUTTONS & COMMON UI
+   ========================================================================== */
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  font-family: var(--font-cinzel);
+  font-weight: 700;
+  border-radius: 8px;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #FFB703, #FF7A00, #E63946);
+  color: #FFFFFF;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  letter-spacing: 1.5px;
+  border: 1px solid var(--gold-primary);
+  box-shadow: 0 4px 20px rgba(255, 122, 0, 0.45), 0 0 15px var(--gold-glow);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 25px rgba(255, 122, 0, 0.7), 0 0 25px var(--gold-glow);
+}
+
+.btn-secondary {
+  background: rgba(30, 15, 50, 0.85);
+  color: var(--gold-primary);
+  padding: 12px 22px;
+  font-size: 0.95rem;
+  letter-spacing: 1.2px;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+.btn-secondary:hover {
+  background: rgba(50, 25, 80, 0.9);
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: rgba(180, 30, 50, 0.8);
+  color: #FFF;
+  padding: 10px 20px;
+  border: 1px solid #FF4466;
+}
+
+/* ==========================================================================
+   OVERLAYS & SCREENS
+   ========================================================================== */
+
+.screen-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  z-index: 20;
+}
+
+.screen-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   MAIN MENU
+   ========================================================================== */
+
+#main-menu {
+  background: radial-gradient(circle at center, rgba(30, 10, 50, 0.6) 0%, rgba(10, 5, 20, 0.92) 80%);
+}
+
+.menu-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInDown 1.2s ease;
+}
+
+.divine-symbol {
+  font-size: 3.5rem;
+  color: var(--gold-primary);
+  text-shadow: 0 0 25px var(--gold-glow);
+  margin-bottom: 0.2rem;
+  animation: pulseDiya 3s infinite ease-in-out;
+}
+
+.game-title {
+  font-family: var(--font-cinzel-dec);
+  font-size: 3.8rem;
+  font-weight: 900;
+  letter-spacing: 8px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFD700 50%, #FF9E00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 15px rgba(255, 160, 0, 0.5));
+}
+
+.game-subtitle {
+  font-family: var(--font-cinzel);
+  font-size: 1.4rem;
+  letter-spacing: 6px;
+  color: #FFE5A3;
+  margin-top: 0.2rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.tagline {
+  font-size: 1.05rem;
+  color: #D4C3A3;
+  letter-spacing: 2px;
+  margin: 1.2rem 0 2.5rem 0;
+  font-style: italic;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 280px;
+}
+
+.menu-footer {
+  margin-top: 2.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 215, 0, 0.6);
+  letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   INTRO CARD
+   ========================================================================== */
+
+.intro-card {
+  background: var(--night-card);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  padding: 35px 45px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 550px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 30px var(--gold-glow);
+}
+
+.intro-diya {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  animation: pulseDiya 2.5s infinite ease-in-out;
+}
+
+.intro-card h2 {
+  font-family: var(--font-cinzel-dec);
+  color: var(--gold-primary);
+  font-size: 1.8rem;
+  margin-bottom: 14px;
+  letter-spacing: 2px;
+}
+
+.intro-card p {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #E6D7BD;
+  margin-bottom: 24px;
+}
+
+.skip-btn {
+  font-size: 0.9rem;
+  padding: 10px 20px;
+}
+
+/* ==========================================================================
+   IN-GAME HUD
+   ========================================================================== */
+
+.hud-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hud-card {
+  position: absolute;
+  background: var(--night-card);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  pointer-events: auto;
+}
+
+.objective-card {
+  top: 20px;
+  left: 20px;
+  max-width: 380px;
+}
+
+.badge-icon {
+  font-size: 1.8rem;
+}
+
+.objective-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-label {
+  font-size: 0.75rem;
+  color: var(--gold-primary);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  font-family: var(--font-cinzel);
+}
+
+.hud-value {
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.blessing-card {
+  top: 20px;
+  right: 20px;
+  gap: 24px;
+}
+
+.blessing-count-wrap, .score-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.counter-val {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  font-family: var(--font-cinzel);
+}
+
+.counter-max {
+  font-size: 0.95rem;
+  color: #AAA;
+}
+
+.score-val {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  font-family: var(--font-cinzel);
+}
+
+/* Ganesha Guidance Dialogue Bubble */
+.guidance-bubble {
+  position: absolute;
+  top: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(26, 12, 42, 0.9);
+  border: 1.5px solid var(--gold-primary);
+  border-radius: 14px;
+  padding: 14px 24px;
+  max-width: 600px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 30px rgba(0,0,0,0.7), 0 0 20px var(--gold-glow);
+  pointer-events: auto;
+  transition: all 0.35s ease;
+}
+
+.guidance-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.guidance-icon {
+  color: var(--gold-primary);
+  font-size: 1.2rem;
+}
+
+.guidance-speaker {
+  font-family: var(--font-cinzel);
+  color: var(--gold-primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1.5px;
+}
+
+.guidance-body {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: #FFF5E1;
+  line-height: 1.4;
+}
+
+/* Interaction Prompt */
+.interaction-prompt {
+  position: absolute;
+  bottom: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 8, 30, 0.88);
+  border: 1px solid var(--gold-primary);
+  padding: 10px 22px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 15px var(--gold-glow);
+  pointer-events: auto;
+  animation: bouncePrompt 1.8s infinite ease-in-out;
+}
+
+.key-badge {
+  background: var(--gold-primary);
+  color: #1A0826;
+  font-weight: 800;
+  font-size: 0.9rem;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+#prompt-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+/* Vighnaharta Ability Button */
+.ability-wrap {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.ability-btn {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FFB703, #FF7A00);
+  border: 2.5px solid var(--gold-primary);
+  box-shadow: 0 4px 25px rgba(255, 122, 0, 0.6), 0 0 15px var(--gold-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ability-btn:hover {
+  transform: scale(1.08);
+}
+
+.ability-btn.active-surge {
+  animation: divineAuraPulse 0.8s infinite alternate;
+  border-color: #FFFFFF;
+}
+
+.cooldown-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: rgba(10, 5, 20, 0.75);
+  transition: height 0.1s linear;
+}
+
+.ability-icon {
+  font-size: 1.8rem;
+  z-index: 2;
+}
+
+.ability-key {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  background: rgba(0,0,0,0.6);
+  padding: 1px 5px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.ability-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  letter-spacing: 1px;
+}
+
+/* Toast */
+.hud-toast {
+  position: absolute;
+  top: 155px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(255, 122, 0, 0.9), rgba(230, 57, 70, 0.9));
+  color: #FFFFFF;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Mobile Virtual Controls */
+.mobile-controls {
+  position: absolute;
+  bottom: 25px;
+  left: 25px;
+  right: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.joystick-zone {
+  width: 130px;
+  height: 130px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.joystick-base {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  backdrop-filter: blur(6px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.joystick-stick {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  box-shadow: 0 0 12px var(--gold-glow);
+  position: absolute;
+}
+
+.touch-actions {
+  display: flex;
+  gap: 16px;
+  pointer-events: auto;
+}
+
+.touch-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(30, 15, 50, 0.85);
+  border: 2px solid var(--gold-primary);
+  color: var(--gold-primary);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.touch-jump {
+  font-size: 0.8rem;
+  background: linear-gradient(135deg, #FF9E00, #E63946);
+  color: #FFF;
+}
+
+/* Only show mobile controls if touch device */
+@media (hover: hover) and (pointer: fine) {
+  .mobile-controls {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   MODALS (RANGOLI, SETTINGS, LEADERBOARD, PAUSE)
+   ========================================================================== */
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 5, 20, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--night-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 30px 40px;
+  max-width: 540px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px var(--gold-glow);
+  text-align: center;
+}
+
+.modal-title {
+  font-family: var(--font-cinzel-dec);
+  color: var(--gold-primary);
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+}
+
+.modal-desc {
+  font-size: 0.95rem;
+  color: #E2D4BD;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Rangoli Puzzle Viewport & Alignment Guides */
+.rangoli-card {
+  max-width: 580px;
+}
+
+.rangoli-diya-badge {
+  font-size: 2.2rem;
+  margin-bottom: 6px;
+  animation: pulseDiya 2s infinite ease-in-out;
+}
+
+.rangoli-alignment-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.alignment-flame {
+  font-family: var(--font-cinzel);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px var(--gold-glow);
+}
+
+.alignment-arrow {
+  color: var(--gold-primary);
+  font-size: 1.1rem;
+  animation: bouncePrompt 1.4s infinite ease-in-out;
+}
+
+.rangoli-puzzle-viewport {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0 auto 16px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alignment-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 215, 0, 0.15) 50%, rgba(255, 215, 0, 0.9) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rangoli-ring {
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.rangoli-ring:hover {
+  filter: brightness(1.15);
+}
+
+.ring-outer {
+  width: 250px;
+  height: 250px;
+  border: 7px dashed #FF9F1C;
+  background: rgba(255, 122, 0, 0.14);
+}
+
+.ring-mid {
+  width: 170px;
+  height: 170px;
+  border: 7px dashed #FF4081;
+  background: rgba(255, 64, 129, 0.18);
+}
+
+.ring-inner {
+  width: 95px;
+  height: 95px;
+  border: 6px dashed #4ECDC4;
+  background: rgba(78, 205, 196, 0.22);
+}
+
+/* Glowing Lotus Alignment Markers */
+.ring-marker {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.45rem;
+  z-index: 5;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+  transition: all 0.3s ease;
+}
+
+.marker-outer {
+  top: -18px;
+}
+
+.marker-mid {
+  top: -16px;
+}
+
+.marker-inner {
+  top: -14px;
+  font-size: 1.25rem;
+}
+
+/* Aligned State */
+.rangoli-ring.ring-aligned {
+  border-style: solid !important;
+  border-color: #FFD700 !important;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), inset 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.rangoli-ring.ring-aligned .ring-marker {
+  transform: translateX(-50%) scale(1.3);
+  filter: drop-shadow(0 0 14px #FFF) drop-shadow(0 0 20px var(--gold-primary));
+}
+
+.rangoli-core {
+  font-size: 1.8rem;
+  color: var(--gold-primary);
+  text-shadow: 0 0 10px var(--gold-glow);
+  z-index: 2;
+}
+
+/* Status Bar */
+.rangoli-status-bar {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+
+.ring-status {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.status-pending {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #DDD;
+}
+
+.status-aligned {
+  background: rgba(46, 204, 113, 0.25);
+  border: 1px solid #2ECC71;
+  color: #2ECC71;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+}
+
+.rangoli-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* Settings Sliders */
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.settings-row input[type="range"] {
+  accent-color: var(--gold-primary);
+  width: 180px;
+}
+
+/* Leaderboard Table */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0 24px 0;
+  font-size: 0.92rem;
+}
+
+.leaderboard-table th {
+  color: var(--gold-primary);
+  font-family: var(--font-cinzel);
+  padding: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.leaderboard-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Victory Overlay */
+.victory-card {
+  background: var(--night-card);
+  border: 2px solid var(--gold-primary);
+  border-radius: 18px;
+  padding: 35px 45px;
+  max-width: 620px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.8), 0 0 40px var(--gold-glow);
+}
+
+.victory-icon {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+  animation: pulseDiya 2s infinite ease-in-out;
+}
+
+.victory-title {
+  font-family: var(--font-cinzel-dec);
+  font-size: 2.2rem;
+  color: var(--gold-primary);
+  margin-bottom: 4px;
+}
+
+.victory-subtitle {
+  font-family: var(--font-cinzel);
+  font-size: 1.4rem;
+  color: #FF9E00;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+
+.victory-blessing {
+  font-size: 1.05rem;
+  color: #E2D4BD;
+  margin-bottom: 22px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat-box {
+  background: rgba(30, 15, 45, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #AAA;
+}
+
+.stat-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  font-family: var(--font-cinzel);
+}
+
+.name-entry-wrap {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.name-entry-wrap input {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--gold-primary);
+  background: rgba(10, 5, 20, 0.7);
+  color: #FFF;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+}
+
+.victory-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulseDiya {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px var(--gold-glow)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 25px rgba(255, 122, 0, 0.9)); }
+}
+
+@keyframes bouncePrompt {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -6px); }
+}
+
+@keyframes divineAuraPulse {
+  0% { box-shadow: 0 0 15px var(--gold-glow); }
+  100% { box-shadow: 0 0 35px #FFF, 0 0 50px var(--gold-primary); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
